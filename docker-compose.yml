@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  python:
+    build:
+      context: .devcontainer
+      dockerfile: Dockerfile
+    volumes:
+      - .:/workspace:cached
+      - /Users/yusuf/Documents/bin:/custom_bin:ro
+    command: sleep infinity
+    environment:
+      MYSQL_URL: mysql://mysql:9030/testdb
+      CONF__DB__URL: sqlite:////tmp/test.db
+      CONF__DB__DBTYPE: sqlite
+      CONF__LAKE__CATALOG_NAME: default
+      CONF__LAKE__CATALOG_PROPERTIES__TYPE: sql
+      CONF__LAKE__CATALOG_PROPERTIES__URI: sqlite:////tmp/lake.db
+      CONF__LAKE__CATALOG_PROPERTIES__INIT_CATALOG_TABLES: true
+      CONF__LAKE__CATALOG_PROPERTIES__WAREHOUSE: file:///tmp/warehouse
+
+  mysql:
+    image: starrocks/allin1-ubuntu

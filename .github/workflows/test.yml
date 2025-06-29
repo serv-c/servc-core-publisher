@@ -7,18 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:lts
-        env:
-          MYSQL_DATABASE: testdb
-          MYSQL_ROOT_PASSWORD: testrootpass
+      starrocks:
+        image: starrocks/allin1-ubuntu
         ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          - 9030:9030
 
     steps:
       - uses: actions/checkout@v4
@@ -44,24 +36,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-          if [ ! -f .coveragerc ]; then
-            echo "[run]" >> .coveragerc
-            echo "omit =" >> .coveragerc
-            echo "  tests/*" >> .coveragerc
-            echo "  worker.py" >> .coveragerc
-          fi
 
       - name: Type check
         run: mypy main.py --check-untyped-defs
 
       - name: Run tests
         env:
-          MYSQL_URL: mysql://root:testrootpass@${{ github.server_url != 'https://github.com' && 'mysql' || '127.0.0.1' }}:3306/testdb
+          MYSQL_URL: mysql://{{ github.server_url != 'https://github.com' && 'starrocks' || '127.0.0.1' }}:9030/testdb
           CONF__DB__DBTYPE: sqlite
           CONF__DB__URL: sqlite:////tmp/test.db
           POD_IP: "127.0.0.1"
+          CONF__LAKE__CATALOG_NAME: default
+          CONF__LAKE__CATALOG_PROPERTIES__TYPE: sql
+          CONF__LAKE__CATALOG_PROPERTIES__URI: sqlite:////tmp/lake.db
+          CONF__LAKE__CATALOG_PROPERTIES__INIT_CATALOG_TABLES: true
+          CONF__LAKE__CATALOG_PROPERTIES__WAREHOUSE: file:///tmp/warehouse
         run: |
+          sudo mkdir -p $SPARK_HOME/conf
           sudo cat spark-defaults.conf >> $SPARK_HOME/conf/spark-defaults.conf
+          sudo cat spark-defaults.conf >> /opt/hostedtoolcache/spark/3.5.0/x64/conf/spark-defaults.conf
 
           echo "Running tests"
           coverage run -m unittest tests/*.py
