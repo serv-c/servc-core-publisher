@@ -1,0 +1,68 @@
+name: 'Unit Tests'
+on:
+  pull_request:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:lts
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_ROOT_PASSWORD: testrootpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - uses: vemonet/setup-spark@v1
+        with:
+          spark-version: '3.5.0'
+          hadoop-version: '3'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          if [ ! -f .coveragerc ]; then
+            echo "[run]" >> .coveragerc
+            echo "omit =" >> .coveragerc
+            echo "  tests/*" >> .coveragerc
+            echo "  worker.py" >> .coveragerc
+          fi
+
+      - name: Type check
+        run: mypy main.py --check-untyped-defs
+
+      - name: Run tests
+        env:
+          MYSQL_URL: mysql://root:testrootpass@${{ github.server_url != 'https://github.com' && 'mysql' || '127.0.0.1' }}:3306/testdb
+          CONF__DB__DBTYPE: sqlite
+          CONF__DB__URL: sqlite:////tmp/test.db
+          POD_IP: "127.0.0.1"
+        run: |
+          sudo cat spark-defaults.conf >> $SPARK_HOME/conf/spark-defaults.conf
+
+          echo "Running tests"
+          coverage run -m unittest tests/*.py
+          coverage report -m --fail-under=70
