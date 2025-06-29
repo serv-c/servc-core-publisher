@@ -1,0 +1,6 @@
+[run]
+omit =
+  tests/*
+  main.py
+  /workspace/serv-c/spark-*/*
+  spark-*/*
