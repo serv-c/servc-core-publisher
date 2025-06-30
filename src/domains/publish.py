@@ -72,27 +72,41 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
         )
 
     # insert the dataset into the database
-    db.query(
-        """
-        INSERT INTO datasets (
-            dataset_id, app_id, auth_expression, location_type, details
-        ) VALUES (
-            :dataset_id, :app_id, :tenant_name, :location_type, :details
+    if len(existing_datasets) > 0:
+        db.query(
+            """
+            UPDATE datasets
+            SET location_type = :location_type, details = :details
+            WHERE app_id = :app_id AND auth_expression = :tenant_name
+            """,
+            {
+                "app_id": payload.app_id,
+                "tenant_name": payload.tenant_name,
+                "location_type": location_type,
+                "details": json.dumps(options),
+            },
+            return_rows=False,
+            commit=True,
         )
-        ON CONFLICT (app_id, auth_expression) DO UPDATE SET
-            location_type = EXCLUDED.location_type,
-            details = EXCLUDED.details
-        """,
-        {
-            "dataset_id": dataset_id,
-            "app_id": payload.app_id,
-            "tenant_name": payload.tenant_name,
-            "location_type": location_type,
-            "details": json.dumps(options),
-        },
-        return_rows=False,
-        commit=True,
-    )
+    else:
+        db.query(
+            """
+            INSERT INTO datasets (
+                dataset_id, app_id, auth_expression, location_type, details
+            ) VALUES (
+                :dataset_id, :app_id, :tenant_name, :location_type, :details
+            )
+            """,
+            {
+                "dataset_id": dataset_id,
+                "app_id": payload.app_id,
+                "tenant_name": payload.tenant_name,
+                "location_type": location_type,
+                "details": json.dumps(options),
+            },
+            return_rows=False,
+            commit=True,
+        )
 
     # add to the system of record for publishing
     publish_records.insert(
@@ -103,7 +117,7 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
                 "dataset_id": dataset_id,
                 "job_id": payload.job_id,
                 "publish_type": payload.type,
-                "payload": payload.model_dump_json(),
+                "payload": json.dumps(raw_payload),
                 "time": datetime.now(timezone.utc),
             }
         ]

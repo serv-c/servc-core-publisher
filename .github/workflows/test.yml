@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      starrocks:
+      mysql:
         image: starrocks/allin1-ubuntu
         ports:
-          - 9030:9030
+          - "9030:9030"
 
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests
         env:
-          MYSQL_URL: mysql://{{ github.server_url != 'https://github.com' && 'starrocks' || '127.0.0.1' }}:9030/testdb
+          MYSQL_URL: mysql://root@${{ github.server_url != 'https://github.com' && 'mysql' || '127.0.0.1' }}:9030
           CONF__DB__DBTYPE: sqlite
           CONF__DB__URL: sqlite:////tmp/test.db
           POD_IP: "127.0.0.1"

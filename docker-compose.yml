@@ -10,7 +10,7 @@ services:
       - /Users/yusuf/Documents/bin:/custom_bin:ro
     command: sleep infinity
     environment:
-      MYSQL_URL: mysql://mysql:9030/testdb
+      MYSQL_URL: mysql://root@mysql:9030
       CONF__DB__URL: sqlite:////tmp/test.db
       CONF__DB__DBTYPE: sqlite
       CONF__LAKE__CATALOG_NAME: default
@@ -21,3 +21,5 @@ services:
 
   mysql:
     image: starrocks/allin1-ubuntu
+    ports:
+      - "9030:9030"
