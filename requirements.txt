@@ -1,7 +1,7 @@
 -i https://pypi.org/simple
 deltalake==0.25.5
 mysql-connector-python==9.3.0
-pyspark==3.5.0
+pyspark==4.0.0
 delta-spark==3.5.0
 
 -i https://pypi.yusufali.ca/simple --trusted-host pypi.yusufali.ca
