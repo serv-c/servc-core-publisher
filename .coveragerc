@@ -4,3 +4,4 @@ omit =
   main.py
   /workspace/serv-c/spark-*/*
   spark-*/*
+  /home/runner/work/servc-core-publisher/spark-*/*

@@ -52,13 +52,18 @@ def starrocks_publish(
 
         # overall_sql = overall_sql.replace(input_table.tablename, new_tablename)
 
-        df = tableConfigtoDf(input_table, spark)
-        df.write.format("jdbc").options(
-            url=f"jdbc:mysql://{parsed_uri.hostname}:9030",
-            driver="com.mysql.cj.jdbc.Driver",
-            dbtable=new_tablename,
-            user=parsed_uri.username or "root",
-        ).mode("append").save()
+        try:
+            df = tableConfigtoDf(input_table, spark)
+            df.write.format("jdbc").options(
+                url=f"jdbc:mysql://{parsed_uri.hostname}:{parsed_uri.port}",
+                driver="com.mysql.cj.jdbc.Driver",
+                dbtable=new_tablename,
+                user=parsed_uri.username or "root",
+            ).mode("append").save()
+        except Exception as e:
+            raise InvalidInputsException(
+                f"Failed to write data for table {input_table.tablename}: {str(e)}"
+            )
         # df.write.format("starrocks").option(
         #     "starrocks.fe.http.url", f"{parsed_uri.hostname}:8030"
         # ).option(

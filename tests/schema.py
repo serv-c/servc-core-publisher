@@ -1,6 +1,16 @@
 from typing import List
 
 QUERIES: List[str] = [
+    "DROP TABLE IF EXISTS datasets;",
+    """
+    CREATE TABLE datasets (
+        dataset_id varchar,
+        app_id varchar,
+        auth_expression varchar,
+        location_type varchar,
+        details varchar
+    );
+    """,
     "DROP TABLE IF EXISTS apps",
     """
     CREATE TABLE IF NOT EXISTS apps (
