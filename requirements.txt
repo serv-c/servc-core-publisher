@@ -1,5 +1,5 @@
 -i https://pypi.org/simple
-deltalake==0.25.5
+deltalake==1.0.2
 mysql-connector-python==9.3.0
 pyspark==3.5.0
 delta-spark==3.5.0
