@@ -7,10 +7,10 @@ from servc.svc.com.storage.delta import Delta
 from servc.svc.com.storage.lake import LakeTable, Medallion
 from servc.svc.config import Config
 from servc_typings.com.db import Database
+from servc_typings.domains.publisher import PublishOptions
+from servc_typings.tables.publish_record import PUBLISH_RECORDS
 
 from src.domains.publish import publish
-from src.pyetl import PublishOptions
-from src.pytype import PUBLISH_RECORDS
 from tests import init_db
 
 schema = pa.schema(

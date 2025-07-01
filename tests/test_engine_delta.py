@@ -7,9 +7,9 @@ from pyspark.sql import SparkSession
 from servc.svc.com.storage.delta import Delta
 from servc.svc.com.storage.lake import LakeTable, Medallion
 from servc.svc.config import Config
+from servc_typings.domains.publisher import InputSQLConfig
 
 from src.publishers.delta import delta_publish
-from src.pyetl import InputSQLConfig
 
 schema = pa.schema(
     [

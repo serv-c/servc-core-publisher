@@ -7,9 +7,9 @@ from servc.svc.config import Config
 from servc.svc.io.output import InvalidInputsException
 from servc_typings.com.db import Database
 from servc_typings.domains.data import DatabaseConfig
+from servc_typings.domains.publisher import SQLOptions
 
 from src.lib.readdf import tableConfigtoDf
-from src.pyetl import SQLOptions
 
 MYSQL_URL = os.getenv("MYSQL_URL", "mysql://root@localhost:9030")
 
@@ -47,7 +47,9 @@ def starrocks_publish(
                 f"Input table {input_table.tablename} is missing the 'tablename' field."
             )
         new_tablename = ".".join([dataset_id, input_table.tablename])
-        sql = input_table.createSQL.replace(input_table.tablename, new_tablename)
+        sql = input_table.createSQL.replace(
+            f" {input_table.tablename} ", f" {new_tablename} "
+        )
         db.query(sql, return_rows=False, commit=True, dialect="mysql")
 
         # overall_sql = overall_sql.replace(input_table.tablename, new_tablename)

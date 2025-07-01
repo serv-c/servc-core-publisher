@@ -5,9 +5,9 @@ from pydantic import ValidationError
 from servc.svc.config import Config
 from servc.svc.io.output import InvalidInputsException
 from servc_typings.domains.data import DeltaConfig
+from servc_typings.domains.publisher import InputSQLConfig
 
 from src.lib.readdf import tableConfigtoDf
-from src.pyetl import InputSQLConfig
 
 
 def delta_publish(
