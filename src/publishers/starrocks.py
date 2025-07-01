@@ -47,7 +47,7 @@ def starrocks_publish(
                 f"Input table {input_table.tablename} is missing the 'tablename' field."
             )
         new_tablename = ".".join([dataset_id, input_table.tablename])
-        sql = input_table.createSQL.replace(input_table.tablename, new_tablename)
+        sql = input_table.createSQL.replace(f" {input_table.tablename} ", f" {new_tablename} ")
         db.query(sql, return_rows=False, commit=True, dialect="mysql")
 
         # overall_sql = overall_sql.replace(input_table.tablename, new_tablename)
