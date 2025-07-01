@@ -29,13 +29,13 @@ def starrocks_publish(
     db = Database(config)
     parsed_uri = urlparse(MYSQL_URL)
 
-    # get the database configuratio
-    # delete the database config if it exists
-    # create the database
-    db.query(f"DROP DATABASE IF EXISTS {dataset_id}", return_rows=False, commit=True)
+    # get the database configuratio and create the database
     db.query(
         f"CREATE DATABASE IF NOT EXISTS {dataset_id}", return_rows=False, commit=True
     )
+    db.close()
+    config.setValue("url", "/".join([config.get("url"), dataset_id]))
+    db = Database(config)
 
     overall_sql = options.sql
 
@@ -46,9 +46,12 @@ def starrocks_publish(
             raise InvalidInputsException(
                 f"Input table {input_table.tablename} is missing the 'tablename' field."
             )
-        new_tablename = ".".join([dataset_id, input_table.tablename])
+        new_tablename = ".".join([dataset_id, input_table.tablename + "_temp"])
         sql = input_table.createSQL.replace(
             f" {input_table.tablename} ", f" {new_tablename} "
+        )
+        db.query(
+            f"DROP TABLE IF EXISTS {new_tablename}", return_rows=False, commit=True
         )
         db.query(sql, return_rows=False, commit=True, dialect="mysql")
 
@@ -79,6 +82,20 @@ def starrocks_publish(
         # ).mode(
         #     "append"
         # ).save()
+
+    # rename the temporary database to the dataset_id
+    for input_table in options.inputTables:
+        temp_tablename = input_table.tablename + "_temp"
+        new_tablename = input_table.tablename
+        db.query(
+            f"DROP TABLE IF EXISTS {new_tablename}", return_rows=False, commit=True
+        )
+        db.query(
+            f"ALTER TABLE {temp_tablename} RENAME {new_tablename}",
+            return_rows=False,
+            commit=True,
+            dialect="mysql",
+        )
 
     return (
         "database",

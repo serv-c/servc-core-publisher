@@ -122,6 +122,56 @@ class TestEngineSQL(unittest.TestCase):
         records = self.records.read(["*"]).to_pylist()
         self.assertEqual(len(records), 2)
 
+    def test_publish_with_failure(self):
+        raw_options = {
+            "app_id": "chess",
+            "tenant_name": "test_tenant",
+            "job_id": "test_job",
+            "type": "database",
+            "sparkConfig": {},
+            "options": {
+                "sparkConfig": {},
+                "sql": "SELECT * FROM test",
+                "inputTables": [
+                    {
+                        "tablename": "test",
+                        "createSQL": "CREATE TABLE test (date STRING, some_int int) ORDER BY (some_int)",
+                        "lakeLocation": os.path.join(
+                            self.table._location_prefix, self.table._get_table_name()
+                        ),
+                        "version": self.table.getCurrentVersion() or "",
+                        "partitions": {},
+                        "partitionby": [],
+                    },
+                ],
+            },
+        }
+        publish("", raw_options, self.context)
+        details = json.loads(
+            self.database.query("SELECT details FROM datasets")[0]["details"]
+        )["url"]
+
+        dbconfig = Config()
+        dbconfig.setValue("url", details.replace("mysql://", "mysql+mysqlconnector://"))
+        dbconfig.setValue("dbtype", "mysql")
+        db = Database(dbconfig)
+        rows = db.query("SELECT * FROM test")
+        databases = len(db.query("SHOW DATABASES"))
+
+        # run a bad job
+        raw_options["job_id"] = "test_job_2"
+        raw_options["options"]["inputTables"][0][
+            "createSQL"
+        ] = "CREATEas_int int) ORDER BY (some3_int)"
+        self.assertRaises(
+            InvalidInputsException,
+            lambda: publish("", raw_options, self.context),
+        )
+
+        # validate the dataset was not lost and a new database was not created
+        self.assertEqual(len(rows), len(db.query("SELECT * FROM test")))
+        self.assertEqual(databases, len(db.query("SHOW DATABASES")))
+
 
 if __name__ == "__main__":
     unittest.main()
