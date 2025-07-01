@@ -4,4 +4,4 @@ pyspark==3.5.6
 delta-spark==3.2.0
 
 -i https://pypi.yusufali.ca/simple --trusted-host pypi.yusufali.ca
-servc_typings==0.17.0
+servc_typings==0.17.1
