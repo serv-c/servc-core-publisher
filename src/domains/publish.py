@@ -64,6 +64,25 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
     )
     if len(existing_datasets) > 0:
         dataset_id = str(existing_datasets[0]["dataset_id"])
+    else:
+        db.query(
+            """
+            INSERT INTO datasets (
+                dataset_id, app_id, auth_expression, location_type, details
+            ) VALUES (
+                :dataset_id, :app_id, :tenant_name, :location_type, :details
+            )
+            """,
+            {
+                "dataset_id": dataset_id,
+                "app_id": payload.app_id,
+                "tenant_name": payload.tenant_name,
+                "location_type": "",  # will be set later
+                "details": json.dumps({}),
+            },
+            return_rows=False,
+            commit=True,
+        )
 
     # create the spark context
     pod_id = os.environ.get("POD_IP", "127.0.0.1")
@@ -87,41 +106,21 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
         )
 
     # insert the dataset into the database
-    if len(existing_datasets) > 0:
-        db.query(
-            """
-            UPDATE datasets
-            SET location_type = :location_type, details = :details
-            WHERE app_id = :app_id AND auth_expression = :tenant_name
-            """,
-            {
-                "app_id": payload.app_id,
-                "tenant_name": payload.tenant_name,
-                "location_type": location_type,
-                "details": json.dumps(options),
-            },
-            return_rows=False,
-            commit=True,
-        )
-    else:
-        db.query(
-            """
-            INSERT INTO datasets (
-                dataset_id, app_id, auth_expression, location_type, details
-            ) VALUES (
-                :dataset_id, :app_id, :tenant_name, :location_type, :details
-            )
-            """,
-            {
-                "dataset_id": dataset_id,
-                "app_id": payload.app_id,
-                "tenant_name": payload.tenant_name,
-                "location_type": location_type,
-                "details": json.dumps(options),
-            },
-            return_rows=False,
-            commit=True,
-        )
+    db.query(
+        """
+        UPDATE datasets
+        SET location_type = :location_type, details = :details
+        WHERE app_id = :app_id AND auth_expression = :tenant_name
+        """,
+        {
+            "app_id": payload.app_id,
+            "tenant_name": payload.tenant_name,
+            "location_type": location_type,
+            "details": json.dumps(options),
+        },
+        return_rows=False,
+        commit=True,
+    )
 
     # add to the system of record for publishing
     publish_records.insert(
