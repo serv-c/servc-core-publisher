@@ -7,9 +7,9 @@ from servc.svc.com.storage.delta import Delta
 from servc.svc.com.storage.lake import LakeTable, Medallion
 from servc.svc.config import Config
 from servc_typings.com.db import Database
+from servc_typings.domains.publisher import SQLOptions
 
 from src.publishers.starrocks import starrocks_publish as publish
-from src.pyetl import SQLOptions
 
 schema = pa.schema(
     [

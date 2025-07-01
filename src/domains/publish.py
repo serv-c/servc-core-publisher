@@ -12,10 +12,10 @@ from servc.svc.io.output import InvalidInputsException
 from servc.util import findType
 from servc_typings.com.db import Database
 from servc_typings.domains.data import engineOptions
+from servc_typings.domains.publisher import PublishOptions, PublishType
+from servc_typings.tables.publish_record import PUBLISH_RECORDS
 
 from src.publishers import publishingEngines
-from src.pyetl import PublishOptions, PublishType
-from src.pytype import PUBLISH_RECORDS
 
 
 def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:

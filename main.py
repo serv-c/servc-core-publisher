@@ -2,10 +2,10 @@
 
 from servc.server import start_server
 from servc_typings.com.db import Database
+from servc_typings.tables.publish_record import PUBLISH_RECORDS
 
 from src.config import QUEUE_NAME
 from src.domains.publish import publish
-from src.pytype import PUBLISH_RECORDS
 
 
 def main():

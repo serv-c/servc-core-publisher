@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.pyetl import InputSQLConfig
+from servc_typings.domains.publisher import InputSQLConfig
 
 
 def tableConfigtoDf(options: InputSQLConfig, spark: Any):
