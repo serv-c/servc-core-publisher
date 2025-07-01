@@ -35,6 +35,21 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
             f"Publishing engine not found for type: {payload.type}"
         )
 
+    # check if this job has been published already
+    existing_records = publish_records.read(
+        columns=["*"],
+        partitions={
+            "app_id": [payload.app_id],
+            "tenant_name": [payload.tenant_name],
+            "job_id": [payload.job_id],
+            "publish_type": [payload.type],
+        },
+    ).to_pylist()
+    if len(existing_records) > 0:
+        raise InvalidInputsException(
+            f"Job {payload.job_id} has already been published for app {payload.app_id} and tenant {payload.tenant_name} with type {payload.type}"
+        )
+
     # generate the dataset_id
     dataset_id: str = re.sub(
         r"[^a-z0-9_]+",

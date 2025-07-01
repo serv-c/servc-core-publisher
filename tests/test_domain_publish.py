@@ -6,6 +6,7 @@ import pyarrow as pa
 from servc.svc.com.storage.delta import Delta
 from servc.svc.com.storage.lake import LakeTable, Medallion
 from servc.svc.config import Config
+from servc.svc.io.output import InvalidInputsException
 from servc_typings.com.db import Database
 from servc_typings.domains.publisher import PublishOptions
 from servc_typings.tables.publish_record import PUBLISH_RECORDS
@@ -100,6 +101,20 @@ class TestEngineSQL(unittest.TestCase):
 
     def test_multiple_publishing(self):
         publish("", self.payload.model_dump(), self.context)
+        self.assertRaises(
+            InvalidInputsException,
+            lambda: publish("", self.payload.model_dump(), self.context),
+        )
+        rows = self.database.query("SELECT * FROM datasets")
+        self.assertEqual(len(rows), 1)
+
+        records = self.records.read(["*"]).to_pylist()
+        self.assertEqual(len(records), 1)
+
+    def test_multiple_job_publishing(self):
+        publish("", self.payload.model_dump(), self.context)
+
+        self.payload.job_id = "test_job_2"
         publish("", self.payload.model_dump(), self.context)
         rows = self.database.query("SELECT * FROM datasets")
         self.assertEqual(len(rows), 1)
