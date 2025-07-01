@@ -81,11 +81,11 @@ def starrocks_publish(
                     "append"
                 ).save()
 
-        except InvalidInputsException as e:
-            pass
-            # raise InvalidInputsException(
-            #     f"Failed to write data for table {input_table.tablename}: {str(e)}"
-            # )
+        except Exception as e:
+        # except InvalidInputsException as e:
+            raise InvalidInputsException(
+                f"Failed to write data for table {input_table.tablename}: {str(e)}"
+            )
 
     # rename the temporary database to the dataset_id
     for input_table in options.inputTables:
