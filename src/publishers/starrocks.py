@@ -106,7 +106,7 @@ def starrocks_publish(
         DatabaseConfig.model_validate(
             {
                 "url": "/".join([MYSQL_URL, dataset_id]),
-                "sql": overall_sql,
+                "sql": overall_sql.strip(),
                 "dialect": "mysql",
             }
         ).model_dump(),
