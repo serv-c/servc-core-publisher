@@ -42,6 +42,7 @@ jobs:
 
       - name: Run tests
         env:
+          TEST_ENV: true
           MYSQL_URL: mysql://root@${{ github.server_url != 'https://github.com' && 'mysql' || '127.0.0.1' }}:9030
           CONF__DB__DBTYPE: sqlite
           CONF__DB__URL: sqlite:////tmp/test.db

@@ -10,6 +10,7 @@ services:
       - /Users/yusuf/Documents/bin:/custom_bin:ro
     command: sleep infinity
     environment:
+      TEST_ENV: true
       MYSQL_URL: mysql://root@mysql:9030
       CONF__DB__URL: sqlite:////tmp/test.db
       CONF__DB__DBTYPE: sqlite

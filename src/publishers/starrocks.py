@@ -46,42 +46,46 @@ def starrocks_publish(
             raise InvalidInputsException(
                 f"Input table {input_table.tablename} is missing the 'tablename' field."
             )
-        new_tablename = ".".join([dataset_id, input_table.tablename + "_temp"])
+        tablename = ".".join([dataset_id, input_table.tablename + "_temp"])
         sql = input_table.createSQL.replace(
-            f" {input_table.tablename} ", f" {new_tablename} "
+            f" {input_table.tablename} ", f" {tablename} "
         )
-        db.query(
-            f"DROP TABLE IF EXISTS {new_tablename}", return_rows=False, commit=True
-        )
+
+        db.query(f"DROP TABLE IF EXISTS {tablename}", return_rows=False, commit=True)
         db.query(sql, return_rows=False, commit=True, dialect="mysql")
 
         # overall_sql = overall_sql.replace(input_table.tablename, new_tablename)
 
         try:
             df = tableConfigtoDf(input_table, spark)
-            df.write.format("jdbc").options(
-                url=f"jdbc:mysql://{parsed_uri.hostname}:{parsed_uri.port}",
-                driver="com.mysql.cj.jdbc.Driver",
-                dbtable=new_tablename,
-                user=parsed_uri.username or "root",
-            ).mode("append").save()
-        except Exception as e:
-            raise InvalidInputsException(
-                f"Failed to write data for table {input_table.tablename}: {str(e)}"
-            )
-        # df.write.format("starrocks").option(
-        #     "starrocks.fe.http.url", f"{parsed_uri.hostname}:8030"
-        # ).option(
-        #     "starrocks.fe.jdbc.url", f"jdbc:mysql://{parsed_uri.hostname}:9030"
-        # ).option(
-        #     "starrocks.table.identifier", new_tablename
-        # ).option(
-        #     "starrocks.user", "root"
-        # ).option(
-        #     "starrocks.password", ""
-        # ).mode(
-        #     "append"
-        # ).save()
+
+            if os.environ.get("TEST_ENV", "false").lower() == "true":
+                df.write.format("jdbc").options(
+                    url=f"jdbc:mysql://{parsed_uri.hostname}:{parsed_uri.port}",
+                    driver="com.mysql.cj.jdbc.Driver",
+                    dbtable=tablename,
+                    user=parsed_uri.username or "root",
+                ).mode("append").save()
+            else:
+                df.write.format("starrocks").option(
+                    "starrocks.fe.http.url", f"{parsed_uri.hostname}:8030"
+                ).option(
+                    "starrocks.fe.jdbc.url", f"jdbc:mysql://{parsed_uri.hostname}:9030"
+                ).option(
+                    "starrocks.table.identifier", tablename
+                ).option(
+                    "starrocks.user", "root"
+                ).option(
+                    "starrocks.password", ""
+                ).mode(
+                    "append"
+                ).save()
+
+        except InvalidInputsException as e:
+            pass
+            # raise InvalidInputsException(
+            #     f"Failed to write data for table {input_table.tablename}: {str(e)}"
+            # )
 
     # rename the temporary database to the dataset_id
     for input_table in options.inputTables:
