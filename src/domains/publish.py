@@ -25,6 +25,7 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
         raise InvalidInputsException(str(e))
     db = findType(context["middlewares"], Database)
     publish_records = findType(context["middlewares"], PUBLISH_RECORDS)
+    print(raw_payload, flush=True)
 
     # validate the publish type is valid
     if payload.type not in [PublishType.WAREHOUSE.value, PublishType.DELTA.value]:
