@@ -88,7 +88,8 @@ def publish(id: str, raw_payload: Any, context: RESOLVER_CONTEXT) -> bool:
     # create the spark context
     pod_id = os.environ.get("POD_IP", "127.0.0.1")
     spark = (
-        SparkSession.builder.appName("publisher")  # type: ignore
+        SparkSession.builder.appName(  # type: ignore
+            "_".join([payload.app_id, payload.tenant_name]))
         .config("spark.driver.host", pod_id)
         .config(map=payload.sparkConfig)  # type: ignore
         .getOrCreate()
